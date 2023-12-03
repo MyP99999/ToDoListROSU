@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import arrow from '../Assets/arrow.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTodos } from '../Context/useTodos';
 
 const getWeekNumber = (date) => {
@@ -16,6 +16,7 @@ const getMaxWeeksInYear = (year) => {
 }
 
 const Todos = () => {
+    const navigate = useNavigate()
     const dayNames = useMemo(() => ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"], []);
     const [selectedDay, setSelectedDay] = useState(dayNames[new Date().getDay()]);
     const [currentWeek, setCurrentWeek] = useState(getWeekNumber(new Date()));
@@ -107,10 +108,12 @@ const Todos = () => {
                         <h1>{todo.name} - ({todo.type})</h1>
                         <h1>Pana la:{todo.time}</h1>
                         <div className='flex gap-4'>
-
-                            <button className='bg-green-500 p-1 text-white rounded-md border-black border-2 hover:bg-green-600 transition-all ease-in-out'>
+                            <button
+                                onClick={() => navigate(`/edittodo/${index}`)} // Assuming index is used as ID
+                                className='bg-green-500 p-1 text-white rounded-md border-black border-2 hover:bg-green-600 transition-all ease-in-out'>
                                 Modifica
                             </button>
+
                             <button
                                 onClick={() => deleteTodo(index)}
                                 className='bg-red-500 p-1 text-white rounded-md border-black border-2 hover:bg-red-700 transition-all ease-in-out'>
