@@ -36,20 +36,18 @@ const EditTodo = () => {
         const selectedDayName = event.target.value;
         setSelectedDay(selectedDayName)
         if (dayNames.includes(selectedDayName)) {
-            // Find the index of the selected day
+
             const dayIndex = dayNames.indexOf(selectedDayName);
-            // Get today's date and day index
+
             const today = new Date();
             const todayIndex = today.getDay();
-            // Calculate the difference in days
+
             let diff = dayIndex - todayIndex;
-            if (diff < 0) diff += 7; // Ensure it's the next occurrence
+            if (diff < 0) diff += 7; 
     
-            // Create a new date object for the next occurrence of the selected day
             const nextOccurrence = new Date(today);
             nextOccurrence.setDate(today.getDate() + diff);
     
-            // Update the todoData with the new date
             setTodoData(prevData => ({
                 ...prevData,
                 date: nextOccurrence.toISOString().split('T')[0]

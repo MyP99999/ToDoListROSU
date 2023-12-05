@@ -24,7 +24,13 @@ const Todos = () => {
     const { todos, setTodos } = useTodos();
 
     const isRecurrentTaskDue = (todo, selectedDate) => {
+        const todoStartDate = new Date(todo.date);
         const todoCreationDate = new Date(todo.date);
+        if (selectedDate < todoStartDate) {
+            // If the selected date is before the start date, the task is not due
+            return false;
+        }
+
         if (todo.recurrence === 'daily') {
             return true;
         } else if (todo.recurrence === 'weekly') {
@@ -36,12 +42,17 @@ const Todos = () => {
     };
 
     const filteredTodos = todos.filter(todo => {
-        const selectedDate = new Date(currentYear, 0, (currentWeek - 1) * 7 + 1);
+        const startOfWeek = new Date(currentYear, 0, 1);
+        startOfWeek.setDate(startOfWeek.getDate() + (currentWeek) * 7 - startOfWeek.getDay());
+
+        // Determine the date for the selected day
+        const selectedDate = new Date(startOfWeek);
         selectedDate.setDate(selectedDate.getDate() + dayNames.indexOf(selectedDay));
 
         if (todo.recurrence) {
             const recurrenceEndDate = todo.recurrenceEndDate ? new Date(todo.recurrenceEndDate) : new Date('9999-12-31');
-            return selectedDate <= recurrenceEndDate && isRecurrentTaskDue(todo, selectedDate);
+            const todoStartDate = new Date(todo.date);
+            return selectedDate >= todoStartDate && selectedDate <= recurrenceEndDate && isRecurrentTaskDue(todo, selectedDate);
         } else {
             const todoDate = new Date(todo.date);
             return todoDate.toDateString() === selectedDate.toDateString();
