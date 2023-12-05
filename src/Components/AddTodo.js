@@ -76,7 +76,6 @@ const AddTodo = () => {
                         {dayNames.map(day => (
                             <option key={day} value={day}>{day}</option>
                         ))}
-                        {isRecurrent && <option value="every">in fiecare zi</option>}
                     </select>
                 </div>
                 {isRecurrent && (

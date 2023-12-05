@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTodos } from '../Context/useTodos';
 
@@ -6,7 +6,8 @@ const EditTodo = () => {
     const { todoId } = useParams();
     const navigate = useNavigate();
     const { todos, setTodos } = useTodos();
-    
+    const [selectedDay, setSelectedDay] = useState('');
+
     const [todoData, setTodoData] = useState({
         name: '',
         type: '',
@@ -16,24 +17,46 @@ const EditTodo = () => {
         recurrenceEndDate: '',
         isRecurrent: false,
     });
-    const dayNames = ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"];
-    const [selectedDay, setSelectedDay] = useState('');
+    const dayNames = useMemo(() => ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"], []);
 
     useEffect(() => {
         const todoToEdit = todos.find((_, index) => index.toString() === todoId);
         if (todoToEdit) {
             setTodoData({ ...todoToEdit, isRecurrent: !!todoToEdit.recurrence });
 
-            // Set selectedDay based on whether the task is recurrent
-            if (todoToEdit.recurrence) {
-                setSelectedDay('every');
-            } else {
-                setSelectedDay(todoToEdit.date);
-            }
+            const editDate = new Date(todoToEdit.date);
+            const dayOfWeek = editDate.getDay();
+            setSelectedDay(dayNames[dayOfWeek]);
         } else {
             navigate('/');
         }
-    }, [todoId, todos, navigate]);
+    }, [todoId, todos, navigate, dayNames]);
+
+    const handleDayChange = (event) => {
+        const selectedDayName = event.target.value;
+        setSelectedDay(selectedDayName)
+        if (dayNames.includes(selectedDayName)) {
+            // Find the index of the selected day
+            const dayIndex = dayNames.indexOf(selectedDayName);
+            // Get today's date and day index
+            const today = new Date();
+            const todayIndex = today.getDay();
+            // Calculate the difference in days
+            let diff = dayIndex - todayIndex;
+            if (diff < 0) diff += 7; // Ensure it's the next occurrence
+    
+            // Create a new date object for the next occurrence of the selected day
+            const nextOccurrence = new Date(today);
+            nextOccurrence.setDate(today.getDate() + diff);
+    
+            // Update the todoData with the new date
+            setTodoData(prevData => ({
+                ...prevData,
+                date: nextOccurrence.toISOString().split('T')[0]
+            }));
+        }
+    };
+    
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -41,13 +64,6 @@ const EditTodo = () => {
             ...prevData,
             [name]: type === 'checkbox' ? checked : value
         }));
-    };
-
-    const handleDayChange = (e) => {
-        setSelectedDay(e.target.value);
-        if (!todoData.isRecurrent) {
-            setTodoData({ ...todoData, date: e.target.value });
-        }
     };
 
     const handleSubmit = (event) => {
@@ -58,7 +74,6 @@ const EditTodo = () => {
         setTodos(updatedTodos);
         navigate('/');
     };
-
     return (
         <div className='bg-gray-300 flex flex-col justify-center items-center min-h-screen'>
             <form onSubmit={handleSubmit} className='flex flex-col border-2 border-black p-8 gap-6'>
