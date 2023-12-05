@@ -24,7 +24,7 @@ const AddTodo = () => {
             const dayIndex = dayNames.indexOf(selectedDayName);
             const today = new Date();
             const todayIndex = today.getDay();
-            const diff = dayIndex - todayIndex;
+            const diff = dayIndex >= todayIndex ? dayIndex - todayIndex : 7 - (todayIndex - dayIndex);
             const selectedDate = new Date(today.setDate(today.getDate() + diff));
             setTodoDate(selectedDate.toISOString().split('T')[0]); // Set the date in YYYY-MM-DD format
         }
@@ -38,14 +38,25 @@ const AddTodo = () => {
         event.preventDefault();
         const name = event.target.name.value;
         const type = event.target.type.value;
-        const newTodo = { name, type, date: todoDate, time: todoTime };
+    
+        // Create a new todo with a unique ID
+        const newTodo = {
+            id: Date.now(), // Using current timestamp as a simple unique ID
+            name, 
+            type, 
+            date: todoDate, 
+            time: todoTime,
+        };
+    
         if (isRecurrent) {
             newTodo.recurrence = recurrence;
             newTodo.recurrenceEndDate = recurrenceEndDate;
         }
+    
         setTodos(prevTodos => [...prevTodos, newTodo]);
         navigate('/');
     };
+    
     return (
         <form onSubmit={handleSubmit} className='bg-gray-300 flex flex-col justify-center items-center min-h-screen'>
             <div className='flex flex-col border-2 border-black p-8 gap-6'>
@@ -79,18 +90,18 @@ const AddTodo = () => {
                     </select>
                 </div>
                 {isRecurrent && (
-                <div className='flex flex-col'>
-                    <label htmlFor="recurrence" className='text-xs'>Frecventa recurentei</label>
-                    <select id="recurrence" onChange={(e) => setRecurrence(e.target.value)} required>
-                        <option value="">Selecteaza frecventa</option>
-                        <option value="daily">Zilnic</option>
-                        <option value="weekly">Saptamanal</option>
-                        <option value="monthly">Lunar</option>
-                    </select>
-                    <label htmlFor="recurrenceEndDate" className='text-xs'>Data de sfarsit a recurentei</label>
-                    <input type="date" id="recurrenceEndDate" onChange={(e) => setRecurrenceEndDate(e.target.value)} className='rounded-md border-2 border-gray-700' />
-                </div>
-            )}
+                    <div className='flex flex-col'>
+                        <label htmlFor="recurrence" className='text-xs'>Frecventa recurentei</label>
+                        <select id="recurrence" onChange={(e) => setRecurrence(e.target.value)} required>
+                            <option value="">Selecteaza frecventa</option>
+                            <option value="daily">Zilnic</option>
+                            <option value="weekly">Saptamanal</option>
+                            <option value="monthly">Lunar</option>
+                        </select>
+                        <label htmlFor="recurrenceEndDate" className='text-xs'>Data de sfarsit a recurentei</label>
+                        <input type="date" id="recurrenceEndDate" onChange={(e) => setRecurrenceEndDate(e.target.value)} className='rounded-md border-2 border-gray-700' />
+                    </div>
+                )}
                 <div className='flex flex-col'>
                     <label htmlFor="time" className='text-xs'>Ora finalizarii</label>
                     <input type="time" id="time" onChange={handleTimeChange} className='rounded-md border-2 border-gray-700' required />

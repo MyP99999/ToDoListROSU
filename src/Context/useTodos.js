@@ -11,6 +11,7 @@ export const TodosProvider = ({ children }) => {
     });
 
     useEffect(() => {
+        console.log(todos)
         const updateTodosStatus = () => {
             const updatedTodos = todos.map(todo => {
                 if (todo.date && todo.time && todo.type !== 'Overdue') {

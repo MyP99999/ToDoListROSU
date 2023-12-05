@@ -20,7 +20,7 @@ const EditTodo = () => {
     const dayNames = useMemo(() => ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"], []);
 
     useEffect(() => {
-        const todoToEdit = todos.find((_, index) => index.toString() === todoId);
+        const todoToEdit = todos.find(todo => todo.id.toString() === todoId);
         if (todoToEdit) {
             setTodoData({ ...todoToEdit, isRecurrent: !!todoToEdit.recurrence });
 
@@ -43,18 +43,18 @@ const EditTodo = () => {
             const todayIndex = today.getDay();
 
             let diff = dayIndex - todayIndex;
-            if (diff < 0) diff += 7; 
-    
+            if (diff < 0) diff += 7;
+
             const nextOccurrence = new Date(today);
             nextOccurrence.setDate(today.getDate() + diff);
-    
+
             setTodoData(prevData => ({
                 ...prevData,
                 date: nextOccurrence.toISOString().split('T')[0]
             }));
         }
     };
-    
+
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -66,12 +66,14 @@ const EditTodo = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        const updatedTodos = todos.map((todo, index) =>
-            index.toString() === todoId ? { ...todoData, recurrence: todoData.isRecurrent ? todoData.recurrence : '' } : todo
+        // Update the todo item by its ID
+        const updatedTodos = todos.map(todo =>
+            todo.id.toString() === todoId ? { ...todoData, id: todo.id, recurrence: todoData.isRecurrent ? todoData.recurrence : '' } : todo
         );
         setTodos(updatedTodos);
         navigate('/');
     };
+    
     return (
         <div className='bg-gray-300 flex flex-col justify-center items-center min-h-screen'>
             <form onSubmit={handleSubmit} className='flex flex-col border-2 border-black p-8 gap-6'>

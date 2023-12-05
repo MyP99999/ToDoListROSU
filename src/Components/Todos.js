@@ -18,19 +18,17 @@ const getMaxWeeksInYear = (year) => {
 const Todos = () => {
     const navigate = useNavigate()
     const dayNames = useMemo(() => ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"], []);
-    const [selectedDay, setSelectedDay] = useState(dayNames[new Date().getDay()]);
+    const todayIndex = new Date().getDay();
+    const previousDayIndex = todayIndex === 0 ? dayNames.length - 1 : todayIndex - 1;
+
+    // Initialize selectedDay to a day before the current day
+    const [selectedDay, setSelectedDay] = useState(dayNames[previousDayIndex]);
     const [currentWeek, setCurrentWeek] = useState(getWeekNumber(new Date()));
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const { todos, setTodos } = useTodos();
 
     const isRecurrentTaskDue = (todo, selectedDate) => {
-        const todoStartDate = new Date(todo.date);
         const todoCreationDate = new Date(todo.date);
-        if (selectedDate < todoStartDate) {
-            // If the selected date is before the start date, the task is not due
-            return false;
-        }
-
         if (todo.recurrence === 'daily') {
             return true;
         } else if (todo.recurrence === 'weekly') {
@@ -42,19 +40,22 @@ const Todos = () => {
     };
 
     const filteredTodos = todos.filter(todo => {
-        const startOfWeek = new Date(currentYear, 0, 1);
-        startOfWeek.setDate(startOfWeek.getDate() + (currentWeek) * 7 - startOfWeek.getDay());
-
-        // Determine the date for the selected day
-        const selectedDate = new Date(startOfWeek);
+        const selectedDate = new Date(currentYear, 0, (currentWeek - 1) * 7 + 1);
         selectedDate.setDate(selectedDate.getDate() + dayNames.indexOf(selectedDay));
 
         if (todo.recurrence) {
-            const recurrenceEndDate = todo.recurrenceEndDate ? new Date(todo.recurrenceEndDate) : new Date('9999-12-31');
             const todoStartDate = new Date(todo.date);
-            return selectedDate >= todoStartDate && selectedDate <= recurrenceEndDate && isRecurrentTaskDue(todo, selectedDate);
+            todoStartDate.setDate(todoStartDate.getDate() - 1); // Adjust to one day before
+
+            const recurrenceEndDate = todo.recurrenceEndDate ? new Date(todo.recurrenceEndDate) : new Date('9999-12-31');
+            const isWithinRecurrenceRange = selectedDate >= todoStartDate && selectedDate <= recurrenceEndDate;
+
+            return isWithinRecurrenceRange && isRecurrentTaskDue(todo, selectedDate);
+      
         } else {
             const todoDate = new Date(todo.date);
+            todoDate.setDate(todoDate.getDate() ); // Adjust to one day before
+
             return todoDate.toDateString() === selectedDate.toDateString();
         }
     });
@@ -82,20 +83,20 @@ const Todos = () => {
         }
     };
 
-    const deleteTodo = (indexToDelete) => {
-        setTodos(todos.filter((_, index) => index !== indexToDelete));
+    const deleteTodo = (idToDelete) => {
+        setTodos(todos.filter(todo => todo.id !== idToDelete));
     };
-
+    
     useEffect(() => {
         const today = new Date();
-        setSelectedDay(dayNames[today.getDay()]);
+        // setSelectedDay(dayNames[today.getDay()]);
         setCurrentWeek(getWeekNumber(today));
         setCurrentYear(today.getFullYear());
     }, [dayNames]);
 
 
     return (
-        <div className='bg-gray-300 flex flex-col gap-12 justify-center items-center min-h-screen p-24'>
+        <div className='bg-gray-300 overflow-auto flex flex-col gap-12 justify-center items-center min-h-screen p-24'>
             <div className='flex justify-between border-2 bg-red-200 border-black p-4 w-full'>
                 <button onClick={decrementWeek} className='hover:scale-110 ease-in-out transition-all'>
                     <img className='h-8' src={arrow} alt="Previous Week" />
@@ -114,19 +115,19 @@ const Todos = () => {
             </div>
 
             <div className='flex flex-col gap-8 w-full'>
-                {filteredTodos.length > 0 ? filteredTodos.map((todo, index) => (
-                    <div key={index} className='flex justify-between items-center bg-red-200 border-2 border-black py-4 px-8'>
+                {filteredTodos.length > 0 ? filteredTodos.map((todo) => (
+                    <div key={todo.id} className='flex justify-between items-center bg-red-200 border-2 border-black py-4 px-8'>
                         <h1>{todo.name} - ({todo.type})</h1>
                         <h1>Pana la:{todo.time}</h1>
                         <div className='flex gap-4'>
                             <button
-                                onClick={() => navigate(`/edittodo/${index}`)} // Assuming index is used as ID
+                                onClick={() => navigate(`/edittodo/${todo.id}`)} // Assuming index is used as ID
                                 className='bg-green-500 p-1 text-white rounded-md border-black border-2 hover:bg-green-600 transition-all ease-in-out'>
                                 Modifica
                             </button>
 
                             <button
-                                onClick={() => deleteTodo(index)}
+                                onClick={() => deleteTodo(todo.id)}
                                 className='bg-red-500 p-1 text-white rounded-md border-black border-2 hover:bg-red-700 transition-all ease-in-out'>
                                 Sterge
                             </button>
